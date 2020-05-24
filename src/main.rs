@@ -5,7 +5,6 @@ use std::io;
 
 #[derive(Deserialize)]
 struct AccountInfo {
-    jwt: String,
     #[serde(rename = "singleSignToken")]
     single_sign_token: String,
 }
@@ -69,7 +68,6 @@ async fn main() -> Result<(), reqwest::Error> {
     let resp_login = client.get(&url)
         .send()
         .await?;
-    println!("{:#?}", resp_login.status());
     let login = resp_login.json::<Login>()
         .await?;
 
@@ -79,7 +77,6 @@ async fn main() -> Result<(), reqwest::Error> {
     let resp_bookshelf = client.get(&url_get_bookshelf)
         .send()
         .await?;
-    println!("{:#?}", resp_bookshelf.status());
     let bookshelf = resp_bookshelf.json::<BookShelf>()
         .await?;
     for (i, bookentry) in bookshelf.books.iter().enumerate() {
@@ -106,15 +103,12 @@ async fn main() -> Result<(), reqwest::Error> {
                                  ?startposition=0&programId={}&token={}",
                                  id,
                                  login.account_info.single_sign_token);
-    println!("{}", url_ask_stream);
 
     let resp = client.get(&url_ask_stream)
         .send()
         .await?;
 
     let location = resp.headers().get("location").unwrap().to_str().unwrap();
-    println!("{:#?}", resp.status());
-    println!("{}", location);
 
     simple_example(&location.to_string());
 
@@ -143,15 +137,10 @@ fn simple_example(video_path: &String) {
     // set speed to 100%, send parameter as a f64
     mpv.set_property("speed",1.0).unwrap();
 
-    // get how many loops are playing as an i64
-    let n_loop : i64 = mpv.get_property("loop").unwrap() ;
-    println!("NUMBER OF LOOPS IS {}",n_loop);
-
     'main: loop {
         while let Some(event) = mpv.wait_event(0.0) {
             // even if you don't do anything with the events, it is still necessary to empty
             // the event loop
-            println!("RECEIVED EVENT : {:?}", event);
             match event {
                 // Shutdown will be triggered when the window is explicitely closed,
                 // while Idle will be triggered when the queue will end
@@ -163,5 +152,4 @@ fn simple_example(video_path: &String) {
         }
     }
 
-    println!("Simple mpv-rs example shutting down");
 }
