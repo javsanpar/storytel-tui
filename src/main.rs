@@ -37,8 +37,7 @@ struct Book {
     name: String,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), reqwest::Error> {
+fn main() {
 
     println!("Please input your email");
     let mut email = String::new();
@@ -59,26 +58,22 @@ async fn main() -> Result<(), reqwest::Error> {
                       ?m=1&uid={}&pwd={}",
                       email.trim(), hex_encryp_pass);
 
-    let client = reqwest::Client::builder()
+    let client = reqwest::blocking::Client::builder()
         .user_agent(app_user_agent)
         .redirect(reqwest::redirect::Policy::none())
         .build()
         .expect("should be able to build reqwest client");
 
     let resp_login = client.get(&url)
-        .send()
-        .await?;
-    let login = resp_login.json::<Login>()
-        .await?;
+        .send();
+    let login = resp_login.unwrap().json::<Login>().unwrap();
 
     let url_get_bookshelf = format!("https://www.storytel.com/api/getBookShelf.\
                                     action?token={}",
                                     login.account_info.single_sign_token);
     let resp_bookshelf = client.get(&url_get_bookshelf)
-        .send()
-        .await?;
-    let bookshelf = resp_bookshelf.json::<BookShelf>()
-        .await?;
+        .send();
+    let bookshelf = resp_bookshelf.unwrap().json::<BookShelf>().unwrap();
     for (i, bookentry) in bookshelf.books.iter().enumerate() {
         match &bookentry.abook {
             Some(abook) => println!("Index: {}\n{}", i, abook.id),
@@ -105,18 +100,17 @@ async fn main() -> Result<(), reqwest::Error> {
                                  login.account_info.single_sign_token);
 
     let resp = client.get(&url_ask_stream)
-        .send()
-        .await?;
+        .send();
 
-    let location = resp.headers().get("location").unwrap().to_str().unwrap();
+    let location = resp.as_ref().unwrap().headers().get("location").unwrap()
+        .to_str().unwrap();
 
-    simple_example(&location.to_string());
+    simple_example(location);
 
-    Ok(())
 
 }
 
-fn simple_example(video_path: &String) {
+fn simple_example(video_path: &str) {
     let mut mpv_builder = mpv::MpvHandlerBuilder::new().expect("Failed to init MPV builder");
 
     // set option "sid" to "no" (no subtitles)
@@ -128,7 +122,7 @@ fn simple_example(video_path: &String) {
 
     let mut mpv = mpv_builder.build().expect("Failed to build MPV handler");
 
-    mpv.command(&["loadfile", video_path as &str])
+    mpv.command(&["loadfile", video_path])
        .expect("Error loading file");
 
     // loop twice, send parameter as a string
