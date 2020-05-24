@@ -1,42 +1,11 @@
 mod password_crypt;
+mod storytel_types;
 mod mpv;
 
-use serde::{Deserialize};
 use std::io;
 
-#[derive(Deserialize)]
-struct AccountInfo {
-    #[serde(rename = "singleSignToken")]
-    single_sign_token: String,
-}
 
-#[derive(Deserialize)]
-struct Login {
-    #[serde(rename = "accountInfo")]
-    account_info: AccountInfo,
-}
 
-#[derive(Deserialize)]
-struct BookShelf {
-    #[serde(rename = "books")]
-    books: Vec<BookEntry>,
-}
-
-#[derive(Deserialize)]
-struct BookEntry {
-    abook: Option<Abook>,
-    book: Book,
-}
-
-#[derive(Deserialize)]
-struct Abook {
-    id: u64,
-}
-
-#[derive(Deserialize)]
-struct Book {
-    name: String,
-}
 
 fn main() {
 
@@ -67,14 +36,15 @@ fn main() {
 
     let resp_login = client.get(&url)
         .send();
-    let login = resp_login.unwrap().json::<Login>().unwrap();
+    let login = resp_login.unwrap().json::<storytel_types::Login>().unwrap();
 
     let url_get_bookshelf = format!("https://www.storytel.com/api/getBookShelf.\
                                     action?token={}",
                                     login.account_info.single_sign_token);
     let resp_bookshelf = client.get(&url_get_bookshelf)
         .send();
-    let bookshelf = resp_bookshelf.unwrap().json::<BookShelf>().unwrap();
+    let bookshelf = resp_bookshelf.unwrap().json::<storytel_types::BookShelf>()
+        .unwrap();
     for (i, bookentry) in bookshelf.books.iter().enumerate() {
         match &bookentry.abook {
             Some(abook) => println!("Index: {}\n{}", i, abook.id),
