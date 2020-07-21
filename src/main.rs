@@ -14,7 +14,9 @@ fn main() {
                         { account_info: client_storytel_api::AccountInfo {
                          single_sign_token: String::from("") } };
     let client_data = client_storytel_api::ClientData
-                        { request_client: client, login_data: login_data };
+                        { request_client: client,
+                          login_data: login_data,
+                          mpv_thread: None };
 
     let mut siv = cursive::default();
 

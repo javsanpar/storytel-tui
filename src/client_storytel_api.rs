@@ -4,6 +4,7 @@ use serde::{Deserialize};
 pub struct ClientData {
     pub request_client: reqwest::blocking::Client,
     pub login_data: Login,
+    pub mpv_thread: Option<std::sync::mpsc::Sender<bool>>,
 }
 
 #[derive(Deserialize)]
