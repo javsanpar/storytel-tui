@@ -14,9 +14,13 @@ fn show_player(siv: &mut Cursive, book_id: &u64) {
     let resp = client_data.request_client.get(&url_ask_stream)
         .send();
 
-    let location = resp.as_ref().unwrap().url().as_str();
+    let location = resp.as_ref().unwrap().url().to_owned().into_string();
 
-    mpv::simple_example(location);
+    if let Some(sender) = client_data.mpv_thread.as_ref() {
+        sender.send(true).unwrap();
+    }
+
+    client_data.mpv_thread = Some(mpv::simple_example(location));
 }
 
 fn show_bookshelf(siv: &mut Cursive) {
