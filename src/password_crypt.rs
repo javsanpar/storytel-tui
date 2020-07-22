@@ -13,10 +13,14 @@ fn pad(password: &str) -> String {
     if module != 0 {
         let pad_length = BLOCK_SIZE - module;
 
-        padded_password = format!("{}{}", password,
-                                      pad_length.to_string()
-                                      .repeat(pad_length.try_into().unwrap())
-                                      .as_str());
+        padded_password = format!(
+            "{}{}",
+            password,
+            pad_length
+                .to_string()
+                .repeat(pad_length.try_into().unwrap())
+                .as_str()
+        );
     }
 
     return padded_password;
@@ -36,4 +40,3 @@ pub fn encrypt_password(password: &str) -> String {
 
     return hex;
 }
-
