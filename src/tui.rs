@@ -12,11 +12,17 @@ fn show_player(siv: &mut Cursive, book_id: &u64) {
 
     let location = resp.as_ref().unwrap().url().to_owned().into_string();
 
-    if let Some(sender) = client_data.mpv_thread.as_ref() {
-        sender.send(true).unwrap();
-    }
-
     client_data.mpv_thread = Some(mpv::simple_example(location));
+    siv.pop_layer();
+    siv.add_layer(
+        Dialog::around(
+            LinearLayout::horizontal()
+                .child(Button::new("Play", mpv::play))
+                .child(Button::new("Pause", mpv::pause))
+                .child(Button::new("Exit", show_bookshelf)),
+        )
+        .title("Player"),
+    );
 }
 
 fn show_bookshelf(siv: &mut Cursive) {

@@ -1,6 +1,29 @@
+use crate::client_storytel_api;
+use cursive::Cursive;
 use std::sync::mpsc;
 
-pub fn simple_example(video_path: String) -> std::sync::mpsc::Sender<bool> {
+pub enum Message {
+    Play,
+    Pause,
+}
+
+pub fn play(siv: &mut Cursive) {
+    send_message(siv, Message::Play);
+}
+
+pub fn pause(siv: &mut Cursive) {
+    send_message(siv, Message::Pause);
+}
+
+fn send_message(siv: &mut Cursive, message: Message) {
+    let client_data = siv.user_data::<client_storytel_api::ClientData>().unwrap();
+
+    if let Some(sender) = client_data.mpv_thread.as_ref() {
+        sender.send(message).unwrap();
+    }
+}
+
+pub fn simple_example(video_path: String) -> std::sync::mpsc::Sender<Message> {
     let (sender, receiver) = mpsc::channel();
     std::thread::spawn(move || {
         let mut mpv_builder = mpv::MpvHandlerBuilder::new().expect("Failed to init MPV builder");
@@ -35,9 +58,15 @@ pub fn simple_example(video_path: String) -> std::sync::mpsc::Sender<bool> {
                     }
                     _ => {}
                 };
-                if receiver.recv().is_ok() {
-                    break 'main;
-                }
+                match receiver.recv() {
+                    Ok(Message::Play) => mpv
+                        .set_property_async("pause", false, 1)
+                        .expect("Error setting MPV property"),
+                    Ok(Message::Pause) => mpv
+                        .set_property_async("pause", true, 1)
+                        .expect("Error setting MPV property"),
+                    _ => break 'main,
+                };
             }
         }
     });

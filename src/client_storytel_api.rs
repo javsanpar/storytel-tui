@@ -1,10 +1,10 @@
-use crate::password_crypt;
+use crate::{mpv, password_crypt};
 use serde::Deserialize;
 
 pub struct ClientData {
     pub request_client: reqwest::blocking::Client,
     pub login_data: Login,
-    pub mpv_thread: Option<std::sync::mpsc::Sender<bool>>,
+    pub mpv_thread: Option<std::sync::mpsc::Sender<mpv::Message>>,
 }
 
 #[derive(Deserialize)]
