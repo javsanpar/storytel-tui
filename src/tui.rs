@@ -19,6 +19,8 @@ fn show_player(siv: &mut Cursive, book_id: &u64) {
             LinearLayout::horizontal()
                 .child(Button::new("Play", mpv::play))
                 .child(Button::new("Pause", mpv::pause))
+                .child(Button::new("Backward", mpv::backward))
+                .child(Button::new("Forward", mpv::forward))
                 .child(Button::new("Exit", show_bookshelf)),
         )
         .title("Player"),

@@ -5,6 +5,8 @@ use std::sync::mpsc;
 pub enum Message {
     Play,
     Pause,
+    Forward,
+    Backward,
 }
 
 pub fn play(siv: &mut Cursive) {
@@ -13,6 +15,14 @@ pub fn play(siv: &mut Cursive) {
 
 pub fn pause(siv: &mut Cursive) {
     send_message(siv, Message::Pause);
+}
+
+pub fn forward(siv: &mut Cursive) {
+    send_message(siv, Message::Forward);
+}
+
+pub fn backward(siv: &mut Cursive) {
+    send_message(siv, Message::Backward);
 }
 
 fn send_message(siv: &mut Cursive, message: Message) {
@@ -64,6 +74,12 @@ pub fn simple_example(video_path: String) -> std::sync::mpsc::Sender<Message> {
                         .expect("Error setting MPV property"),
                     Ok(Message::Pause) => mpv
                         .set_property_async("pause", true, 1)
+                        .expect("Error setting MPV property"),
+                    Ok(Message::Forward) => mpv
+                        .command(&["seek", "5"])
+                        .expect("Error setting MPV property"),
+                    Ok(Message::Backward) => mpv
+                        .command(&["seek", "-5"])
                         .expect("Error setting MPV property"),
                     _ => break 'main,
                 };
