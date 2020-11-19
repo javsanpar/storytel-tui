@@ -4,15 +4,23 @@ use cursive::Cursive;
 
 use crate::{client_storytel_api, mpv};
 
-fn show_player(siv: &mut Cursive, book_id: &u64) {
+fn show_player(siv: &mut Cursive, book_mpv: &(u64, i64)) {
+    let book_id = book_mpv.0;
     let client_data = siv.user_data::<client_storytel_api::ClientData>().unwrap();
-    let url_ask_stream = client_storytel_api::get_stream_url(client_data, book_id);
+    let url_ask_stream = client_storytel_api::get_stream_url(client_data, &book_id);
 
     let resp = client_data.request_client.get(&url_ask_stream).send();
 
     let location = resp.as_ref().unwrap().url().to_owned().into_string();
 
-    client_data.mpv_thread = Some(mpv::simple_example(location));
+    let mut seconds: i64 = 0;
+    if book_mpv.1 != -1 {
+        let microsec_to_sec = 1000000;
+        seconds = book_mpv.1 / microsec_to_sec;
+    }
+
+    client_data.mpv_thread = Some(mpv::simple_example(location, seconds));
+
     siv.pop_layer();
     siv.add_layer(
         Dialog::around(
@@ -32,10 +40,13 @@ fn show_bookshelf(siv: &mut Cursive) {
         siv.user_data::<client_storytel_api::ClientData>().unwrap(),
     );
     siv.pop_layer();
-    let mut book_select: Vec<(String, u64)> = Vec::new();
+    let mut book_select: Vec<(String, (u64, i64))> = Vec::new();
     for book_entry in bookshelf.books.iter() {
         match &book_entry.abook {
-            Some(abook) => book_select.push((book_entry.book.name.clone(), abook.id)),
+            Some(abook) => book_select.push((
+                book_entry.book.name.clone(),
+                (abook.id, book_entry.abookmark.as_ref().unwrap().position),
+            )),
             None => continue,
         }
         println!("{}", book_entry.book.name);

@@ -33,7 +33,7 @@ fn send_message(siv: &mut Cursive, message: Message) {
     }
 }
 
-pub fn simple_example(video_path: String) -> std::sync::mpsc::Sender<Message> {
+pub fn simple_example(video_path: String, position: i64) -> std::sync::mpsc::Sender<Message> {
     let (sender, receiver) = mpsc::channel();
     std::thread::spawn(move || {
         let mut mpv_builder = mpv::MpvHandlerBuilder::new().expect("Failed to init MPV builder");
@@ -44,6 +44,10 @@ pub fn simple_example(video_path: String) -> std::sync::mpsc::Sender<Message> {
 
         // enable On Screen Controller (disabled with libmpv by default)
         mpv_builder.set_option("osc", true).unwrap();
+
+        mpv_builder
+            .set_option("start", position.to_string().as_str())
+            .unwrap();
 
         let mut mpv = mpv_builder.build().expect("Failed to build MPV handler");
 

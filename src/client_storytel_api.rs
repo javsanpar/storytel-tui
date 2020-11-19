@@ -28,7 +28,15 @@ pub struct BookShelf {
 #[derive(Deserialize)]
 pub struct BookEntry {
     pub abook: Option<Abook>,
+    #[serde(rename = "abookMark")]
+    pub abookmark: Option<AbookMark>,
     pub book: Book,
+}
+
+#[derive(Deserialize)]
+pub struct AbookMark {
+    #[serde(rename = "pos")]
+    pub position: i64,
 }
 
 #[derive(Deserialize)]
