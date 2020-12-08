@@ -15,6 +15,10 @@ pub fn play(siv: &mut Cursive) {
 
 pub fn pause(siv: &mut Cursive) {
     send_message(siv, Message::Pause);
+
+    let client_data = siv.user_data::<client_storytel_api::ClientData>().unwrap();
+    let position = client_data.receiver.as_ref().unwrap().recv().unwrap();
+    client_storytel_api::set_bookmark(client_data, position);
 }
 
 pub fn forward(siv: &mut Cursive) {
@@ -28,13 +32,20 @@ pub fn backward(siv: &mut Cursive) {
 fn send_message(siv: &mut Cursive, message: Message) {
     let client_data = siv.user_data::<client_storytel_api::ClientData>().unwrap();
 
-    if let Some(sender) = client_data.mpv_thread.as_ref() {
+    if let Some(sender) = client_data.sender.as_ref() {
         sender.send(message).unwrap();
     }
 }
 
-pub fn simple_example(video_path: String, position: i64) -> std::sync::mpsc::Sender<Message> {
-    let (sender, receiver) = mpsc::channel();
+pub fn simple_example(
+    video_path: String,
+    position: i64,
+) -> (
+    std::sync::mpsc::Sender<Message>,
+    std::sync::mpsc::Receiver<i64>,
+) {
+    let (sender_tui, receiver_mpv) = mpsc::channel();
+    let (sender_mpv, receiver_tui) = mpsc::channel();
     std::thread::spawn(move || {
         let mut mpv_builder = mpv::MpvHandlerBuilder::new().expect("Failed to init MPV builder");
 
@@ -44,6 +55,7 @@ pub fn simple_example(video_path: String, position: i64) -> std::sync::mpsc::Sen
 
         // enable On Screen Controller (disabled with libmpv by default)
         mpv_builder.set_option("osc", true).unwrap();
+        mpv_builder.set_option("log-file", "/tmp/mpv.log").unwrap(); //XXX
 
         mpv_builder
             .set_option("start", position.to_string().as_str())
@@ -72,13 +84,16 @@ pub fn simple_example(video_path: String, position: i64) -> std::sync::mpsc::Sen
                     }
                     _ => {}
                 };
-                match receiver.recv() {
+                match receiver_mpv.recv() {
                     Ok(Message::Play) => mpv
                         .set_property_async("pause", false, 1)
                         .expect("Error setting MPV property"),
-                    Ok(Message::Pause) => mpv
-                        .set_property_async("pause", true, 1)
-                        .expect("Error setting MPV property"),
+                    Ok(Message::Pause) => {
+                        mpv.set_property_async("pause", true, 1)
+                            .expect("Error setting MPV property");
+                        let position: i64 = mpv.get_property("time-pos").unwrap();
+                        sender_mpv.send(position).unwrap();
+                    }
                     Ok(Message::Forward) => mpv
                         .command(&["seek", "5"])
                         .expect("Error setting MPV property"),
@@ -91,5 +106,5 @@ pub fn simple_example(video_path: String, position: i64) -> std::sync::mpsc::Sen
         }
     });
 
-    return sender;
+    return (sender_tui, receiver_tui);
 }

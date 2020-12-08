@@ -4,7 +4,9 @@ use serde::Deserialize;
 pub struct ClientData {
     pub request_client: reqwest::blocking::Client,
     pub login_data: Login,
-    pub mpv_thread: Option<std::sync::mpsc::Sender<mpv::Message>>,
+    pub sender: Option<std::sync::mpsc::Sender<mpv::Message>>,
+    pub receiver: Option<std::sync::mpsc::Receiver<i64>>,
+    pub current_abookmark_id: Option<u64>,
 }
 
 #[derive(Deserialize)]
@@ -35,6 +37,8 @@ pub struct BookEntry {
 
 #[derive(Deserialize)]
 pub struct AbookMark {
+    #[serde(rename = "bookId")]
+    pub id: u64,
     #[serde(rename = "pos")]
     pub position: i64,
 }
@@ -92,4 +96,31 @@ pub fn get_stream_url(client_data: &mut ClientData, id: &u64) -> String {
         .to_str()
         .unwrap()
         .to_string()
+}
+
+pub fn set_bookmark(client_data: &mut ClientData, position: i64) {
+    let microsec_to_sec = 1000000;
+    let params = [
+        (
+            "token",
+            client_data
+                .login_data
+                .account_info
+                .single_sign_token
+                .to_string(),
+        ),
+        (
+            "bookId",
+            client_data.current_abookmark_id.unwrap().to_string(),
+        ),
+        ("pos", (position * microsec_to_sec).to_string()),
+        ("type", "1".to_string()),
+    ];
+    let url_set_bookmark = format!("https://www.storytel.se/api/setABookmark.action");
+    client_data
+        .request_client
+        .post(&url_set_bookmark)
+        .form(&params)
+        .send()
+        .unwrap();
 }

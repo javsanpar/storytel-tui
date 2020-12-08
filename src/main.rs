@@ -18,7 +18,9 @@ fn main() {
     let client_data = client_storytel_api::ClientData {
         request_client: client,
         login_data: login_data,
-        mpv_thread: None,
+        sender: None,
+        receiver: None,
+        current_abookmark_id: None,
     };
 
     let mut siv = cursive::default();
