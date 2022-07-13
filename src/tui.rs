@@ -11,7 +11,7 @@ fn show_player(siv: &mut Cursive, book_mpv: &(u64, i64, u64)) {
 
     let resp = client_data.request_client.get(&url_ask_stream).send();
 
-    let location = resp.as_ref().unwrap().url().to_owned().into_string();
+    let location = resp.as_ref().unwrap().url().to_owned().to_string();
 
     let mut seconds: i64 = 0;
     if book_mpv.1 != -1 {
