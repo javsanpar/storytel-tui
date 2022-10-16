@@ -2,6 +2,7 @@ mod client_storytel_api;
 mod mpv;
 mod password_crypt;
 mod tui;
+use gag::Gag;
 
 fn main() {
     let user_agent: &str = "okhttp/3.12.8";
@@ -29,5 +30,8 @@ fn main() {
 
     tui::show_login(&mut siv);
 
+    let print_gag = Gag::stderr().unwrap();
     siv.run();
+    drop(print_gag);
+
 }
