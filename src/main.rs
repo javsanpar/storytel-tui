@@ -2,6 +2,7 @@ mod client_storytel_api;
 mod mpv;
 mod password_crypt;
 mod tui;
+use gag::Gag;
 
 fn main() {
     let user_agent: &str = "okhttp/3.12.8";
