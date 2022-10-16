@@ -29,5 +29,8 @@ fn main() {
 
     tui::show_login(&mut siv);
 
+    let print_gag = Gag::stderr().unwrap();
     siv.run();
+    drop(print_gag);
+
 }
