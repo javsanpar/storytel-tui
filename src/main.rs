@@ -1,3 +1,7 @@
+use cursive::Cursive;
+use cursive::reexports::log;
+use cursive::reexports::log::LevelFilter;
+
 mod client_storytel_api;
 mod mpv;
 mod password_crypt;
@@ -25,6 +29,16 @@ fn main() {
 
     let mut siv = cursive::default();
 
+    cursive::logger::init();
+    match std::env::var("RUST_LOG").unwrap_or_else(|_| "info".to_string()).as_ref() {
+        "trace" => log::set_max_level(LevelFilter::Trace),
+        "debug" => log::set_max_level(LevelFilter::Debug),
+        "info" => log::set_max_level(LevelFilter::Info),
+        "warn" => log::set_max_level(LevelFilter::Warn),
+        "error" => log::set_max_level(LevelFilter::Error),
+        _ => log::set_max_level(LevelFilter::Off),
+    }
+    siv.add_global_callback('~', Cursive::toggle_debug_console);
     siv.set_user_data(client_data);
 
     tui::show_login(&mut siv);

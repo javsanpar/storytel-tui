@@ -1,6 +1,8 @@
+use cursive::align::HAlign;
+use cursive::Cursive;
+use cursive::reexports::log;
 use cursive::traits::*;
 use cursive::views::{Button, Dialog, EditView, LinearLayout, SelectView, TextView};
-use cursive::Cursive;
 
 use crate::{client_storytel_api, mpv};
 
@@ -23,12 +25,26 @@ fn show_player(siv: &mut Cursive, book_mpv: &(u64, i64, u64)) {
     client_data.sender = Some(sender);
     client_data.receiver = Some(receiver);
 
+    let player_speed = SelectView::new().h_align(HAlign::Center)
+    .item("Speed", 100)
+    .item("1", 100)
+    .item("1.25", 125)
+    .item("1.5", 150)
+    .item("1.75", 175)
+    .item("2", 200)
+    .on_submit(|s, item| {
+        log::info!("selected item:{}",item);
+        mpv::speed(s, item);
+    });
+
+    
     siv.pop_layer();
     siv.add_layer(
         Dialog::around(
             LinearLayout::horizontal()
                 .child(Button::new("Play", mpv::play))
                 .child(Button::new("Pause", mpv::pause))
+                .child(player_speed)
                 .child(Button::new("Backward", mpv::backward))
                 .child(Button::new("Forward", mpv::forward))
                 .child(Button::new("Exit", show_bookshelf)),
