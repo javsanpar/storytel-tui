@@ -1,12 +1,20 @@
 use crate::client_storytel_api;
 use cursive::Cursive;
 use std::sync::mpsc;
+use cursive::reexports::log;
 
 pub enum Message {
     Play,
     Pause,
     Forward,
     Backward,
+    Speed{
+        value:i32
+    },
+}
+
+pub fn speed(siv: &mut Cursive, am: &i32)  {
+     send_message(siv, Message::Speed{value: *am });
 }
 
 pub fn play(siv: &mut Cursive) {
@@ -41,8 +49,8 @@ pub fn simple_example(
     video_path: String,
     position: i64,
 ) -> (
-    std::sync::mpsc::Sender<Message>,
-    std::sync::mpsc::Receiver<i64>,
+    mpsc::Sender<Message>,
+    mpsc::Receiver<i64>,
 ) {
     let (sender_tui, receiver_mpv) = mpsc::channel();
     let (sender_mpv, receiver_tui) = mpsc::channel();
@@ -100,6 +108,15 @@ pub fn simple_example(
                     Ok(Message::Backward) => mpv
                         .command(&["seek", "-5"])
                         .expect("Error setting MPV property"),
+                    Ok(Message::Speed{value}) => {
+                        let speed_val = value as f64 / 100f64;
+                        log::info!("item:{}, speed:{}", value, speed_val);
+                        if speed_val > 0.1 {
+                            mpv
+                                .set_property("speed", speed_val)
+                                .expect("Error setting MPV property");
+                        }
+                    }
                     _ => break 'main,
                 };
             }
