@@ -31,6 +31,8 @@ fn show_player(siv: &mut Cursive, book_mpv: &(u64, i64, u64)) {
                 .child(Button::new("Pause", mpv::pause))
                 .child(Button::new("Backward", mpv::backward))
                 .child(Button::new("Forward", mpv::forward))
+                .child(Button::new("Speed+", mpv::speed_up))
+                .child(Button::new("Speed-", mpv::slow_down))
                 .child(Button::new("Exit", show_bookshelf)),
         )
         .title("Player"),
