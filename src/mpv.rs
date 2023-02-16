@@ -7,6 +7,8 @@ pub enum Message {
     Pause,
     Forward,
     Backward,
+    SpeedUp,
+    SlowDown,
 }
 
 pub fn play(siv: &mut Cursive) {
@@ -23,6 +25,14 @@ pub fn pause(siv: &mut Cursive) {
 
 pub fn forward(siv: &mut Cursive) {
     send_message(siv, Message::Forward);
+}
+
+pub fn speed_up(siv: &mut Cursive) {
+    send_message(siv, Message::SpeedUp)
+}
+
+pub fn slow_down(siv: &mut Cursive) {
+    send_message(siv, Message::SlowDown)
 }
 
 pub fn backward(siv: &mut Cursive) {
@@ -100,6 +110,18 @@ pub fn simple_example(
                     Ok(Message::Backward) => mpv
                         .command(&["seek", "-5"])
                         .expect("Error setting MPV property"),
+                        Ok(Message::SpeedUp) => {
+                            let speed: f64 = mpv.get_property("speed").unwrap();
+                            let new_speed: f64 = (speed + 0.25).min(5.0);
+                            mpv.set_option("speed", new_speed)
+                                .expect("Error setting MPV property");
+                        },
+                        Ok(Message::SlowDown) => {
+                            let speed: f64 = mpv.get_property("speed").unwrap();
+                            let new_speed: f64 = (speed - 0.25).min(0.5);
+                            mpv.set_option("speed", new_speed)
+                                .expect("Error setting MPV property");
+                        },
                     _ => break 'main,
                 };
             }
